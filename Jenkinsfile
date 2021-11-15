@@ -36,9 +36,14 @@ adminPassword=password
 
 pipeline {
   
-  agent any
+  agent { label params.jenkins_label}
    parameters {
 
+        string (
+            defaultValue: 'build_tool',
+            description: 'Jenkins label',
+            name : 'jenkins_label',
+            trim : true)
         string(name: 'orgId', defaultValue: '', description: 'OrgId of the org to be migrated')
         string(name: 'parentMigrationId', defaultValue: '', description: '(If Moving Suborgs, what is the parent org migid? )')
         string(name: 'configFileId', defaultValue: 'org_migration_config', description: 'Configuration File Id(File that contains urls, passwords)')
