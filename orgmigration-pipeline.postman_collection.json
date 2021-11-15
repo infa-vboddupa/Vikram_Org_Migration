@@ -1,0 +1,1084 @@
+{
+	"info": {
+		"_postman_id": "7f4a6fd7-f190-4462-acf4-6103619ce2dc",
+		"name": "orgmigration-pipeline",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "DestinationPodValidation",
+			"item": [
+				{
+					"name": "login as p2p admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f673219a-d9cf-4f76-94ae-dd0671acd380",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"var pod2_url = pm.variables.get(\"pod2.url\");",
+									"console.log(\"---------->>>pod2_url:\"+pod2_url);",
+									"pm.test(\"Checking if the destination-url is there\", function() {",
+									"    pm.expect(pod2_url).not.equal(undefined);",
+									"    pm.expect(pod2_url).not.equal(\"\")",
+									"    pm.expect(pod2_url).not.equal(null)",
+									"});",
+									"if(pod2_url === undefined) {",
+									"    postman.setNextRequest(null)",
+									"    return",
+									"}",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"} else {",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    postman.setEnvironmentVariable(\"p2p_admin_session_id\", jsonData.sessionId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "01761033-a3a9-42e2-af99-0a4ca524da5e",
+								"exec": [
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X_INFA_LOG_CTX",
+								"type": "text",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\" : \"{{pod1.AdminUserName}}\",\n\t\"password\" : \"{{pod1.AdminPassword}}\"\n}\n\n"
+						},
+						"url": {
+							"raw": "{{pod1.idsma.url}}/identity-service/api/v1/Login",
+							"host": [
+								"{{pod1.idsma.url}}"
+							],
+							"path": [
+								"identity-service",
+								"api",
+								"v1",
+								"Login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetDestinationPodId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4471982b-da8d-47ae-b51d-b57fd3cc4cb7",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"var pod2_url = pm.variables.get(\"pod2.url\");",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"   return",
+									"} ",
+									"var jsonData = JSON.parse(responseBody);",
+									"for( var i=0; i< jsonData.length;i++){",
+									"    if( pod2_url === jsonData[i].baseUrl ){",
+									"        console.log(jsonData[i].id)",
+									"         postman.setEnvironmentVariable(\"destination_pod_id\", jsonData[i].id);",
+									"    }",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X_INFA_LOG_CTX",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}",
+								"type": "text"
+							},
+							{
+								"key": "IDS-SESSION-ID",
+								"value": "{{p2p_admin_session_id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{pod1.idsma.url}}/ma/api/v3/Pod",
+							"host": [
+								"{{pod1.idsma.url}}"
+							],
+							"path": [
+								"ma",
+								"api",
+								"v3",
+								"Pod"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetOrgsCurrentPod",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4471982b-da8d-47ae-b51d-b57fd3cc4cb7",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"   return",
+									"}",
+									"console.log(responseBody)",
+									"var orgsPodId = responseBody",
+									"",
+									"var destination_pod_id = pm.variables.get(\"destination_pod_id\");",
+									"var pod2_url = pm.variables.get(\"pod2.url\");",
+									"if(!pod2_url.includes(\"ics.dev\")){",
+									"pm.test(\"Checking if destination pod is not org's current pod\", function() {",
+									"    pm.expect(orgsPodId).not.equal(destination_pod_id);",
+									"    postman.setNextRequest(null);",
+									"   return",
+									"});",
+									"}",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X_INFA_LOG_CTX",
+								"type": "text",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}"
+							},
+							{
+								"key": "IDS-SESSION-ID",
+								"type": "text",
+								"value": "{{p2p_admin_session_id}}"
+							},
+							{
+								"key": "SELECTED_ORG_ID",
+								"value": "{{orgid}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{pod1.idsma.url}}/ma/api/v3/Pod/GetPodForOrg?orgId={{orgid}}",
+							"host": [
+								"{{pod1.idsma.url}}"
+							],
+							"path": [
+								"ma",
+								"api",
+								"v3",
+								"Pod",
+								"GetPodForOrg"
+							],
+							"query": [
+								{
+									"key": "orgId",
+									"value": "{{orgid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "SubOrgCaseValidation",
+			"item": [
+				{
+					"name": "login as p2p admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f673219a-d9cf-4f76-94ae-dd0671acd380",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									" ",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"   return",
+									"} else {",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    postman.setEnvironmentVariable(\"p2p_admin_suborg_check_session_id\", jsonData.sessionId);",
+									"    postman.setEnvironmentVariable(\"p2pSystemOrgId\", jsonData.currentOrgId);",
+									"    pm.test(\"Checking if admin is system org\", function() {",
+									"        pm.expect(\"System Org\").equal(jsonData.orgName);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "01761033-a3a9-42e2-af99-0a4ca524da5e",
+								"exec": [
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X_INFA_LOG_CTX",
+								"type": "text",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\" : \"{{pod1.AdminUserName}}\",\n\t\"password\" : \"{{pod1.AdminPassword}}\"\n}\n\n"
+						},
+						"url": {
+							"raw": "{{pod1.idsma.url}}/identity-service/api/v1/Login",
+							"host": [
+								"{{pod1.idsma.url}}"
+							],
+							"path": [
+								"identity-service",
+								"api",
+								"v1",
+								"Login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetSubOrgCount",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0d060a81-611c-4044-9247-cba952d4d88a",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"// postman.setEnvironmentVariable(\"p2p_system_org_id\", jsonData.currentOrgId);",
+									"var p2p_system_org_id = pm.variables.get(\"p2p_system_org_id\");",
+									"var orgId=pm.variables.get(\"orgid\");",
+									"",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"   return",
+									"}",
+									"var jsonData = JSON.parse(responseBody);",
+									"var subOrgCount=jsonData.value.length;",
+									"console.log(\"This Org: \"+orgId+\" has: \"+subOrgCount+\" suborgs\");",
+									"",
+									"postman.setEnvironmentVariable(\"subOrgCount\", subOrgCount);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "IDS-SESSION-ID",
+								"value": "{{p2p_admin_suborg_check_session_id}}",
+								"type": "text"
+							},
+							{
+								"key": "X_INFA_LOG_CTX",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{pod1.idsma.url}}/identity-service/api/v1/Orgs?$filter=parentOrgId eq '{{orgid}}'",
+							"host": [
+								"{{pod1.idsma.url}}"
+							],
+							"path": [
+								"identity-service",
+								"api",
+								"v1",
+								"Orgs"
+							],
+							"query": [
+								{
+									"key": "$filter",
+									"value": "parentOrgId eq '{{orgid}}'"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "SubOrgCheck",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4471982b-da8d-47ae-b51d-b57fd3cc4cb7",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"// postman.setEnvironmentVariable(\"p2p_system_org_id\", jsonData.currentOrgId);",
+									"",
+									"",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"   return",
+									"}",
+									"var jsonData = JSON.parse(responseBody);",
+									"var parentMigrationId=pm.variables.get(\"parentMigrationId\");",
+									"var includeSubOrgs = pm.variables.get(\"includeSubOrgs\");",
+									"var subOrgCount = pm.variables.get(\"subOrgCount\");",
+									"var systemOrgId = pm.variables.get(\"p2pSystemOrgId\");",
+									"var parentOrgId = jsonData.id;",
+									"",
+									"var isParentMigrationIdSet = !(parentMigrationId === null || parentMigrationId === undefined || parentMigrationId === \"\");",
+									"var isIncludeSubOrgs = includeSubOrgs === 'true';",
+									"",
+									"console.log(\"[parentMigrationId=\"+parentMigrationId+\"]\");",
+									"console.log(\"[includeSubOrgs=\"+includeSubOrgs+\"]\");",
+									"console.log(\"[subOrgCount=\"+subOrgCount+\"]\");",
+									"console.log(\"[p2pSystemOrgId=\"+systemOrgId+\"]\");",
+									"console.log(\"[parentOrgId=\"+parentOrgId+\"]\");",
+									"console.log(\"[isParentMigrationIdSet=\"+isParentMigrationIdSet+\"]\");",
+									"console.log(\"[isIncludeSubOrgs=\"+isIncludeSubOrgs+\"]\");",
+									"",
+									"",
+									"var isSubOrg = (parentOrgId != systemOrgId );",
+									"var isNormalOrg = parseInt(subOrgCount) === 0 && ( parentOrgId == systemOrgId);",
+									"var isParentOrg = parseInt(subOrgCount) > 0 &&  ( parentOrgId == systemOrgId);",
+									"",
+									"console.log(\"isSubOrg=\"+isSubOrg);",
+									"console.log(\"isParentOrg=\"+isParentOrg);",
+									"console.log(\"isNormalOrg=\"+isNormalOrg);",
+									"",
+									"/*",
+									"if subOrg: includeSubOrgs can not be true and parentMigrationId has to be not - null",
+									"if isParentOrg: parentMigrationId has to be null; includeSubOrgs can be either value",
+									"if isNormalOrg: parentMigrationId has to be null and includeSubOrgs has to be false",
+									"*/",
+									"//isParentMigrationIdSet, isIncludeSubOrgs",
+									"if( isSubOrg === true ) {",
+									"    console.log(\"isSubOrg True; validating input for suborg\")",
+									"  tests[\"SubOrg: includeSubOrgs == false([isIncludeSubOrgs=\"+isIncludeSubOrgs+\"])\"] = isIncludeSubOrgs === false;",
+									"  tests[\"SubOrg: parentMigrationId != null([isParentMigrationIdSet=\"+isParentMigrationIdSet+\"])\"] = isParentMigrationIdSet === true;",
+									"}",
+									"if( isParentOrg===true){",
+									"      tests[\"ParentOrg: parentMigrationId == null([isParentMigrationIdSet:\"+isParentMigrationIdSet+\"])\"] = isParentMigrationIdSet === false;",
+									"}",
+									"if(isNormalOrg === true){",
+									"    tests[\"NormalOrg: includeSubOrgs === false ([isIncludeSubOrgs:\"+isIncludeSubOrgs+\"])\"] = isIncludeSubOrgs === false;",
+									"    tests[\"NormalOrg: parentMigrationId == null(isParentMigrationIdSet:[\"+isParentMigrationIdSet+\"])\" ] = isParentMigrationIdSet === false;",
+									"}",
+									"",
+									"console.log(\"SubOrgCheck-Complete\");",
+									"",
+									"",
+									"if(isParentMigrationIdSet === false ){",
+									"     postman.setNextRequest(null);",
+									"}",
+									"postman.setEnvironmentVariable(\"parentOrgId\", parentOrgId);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X_INFA_LOG_CTX",
+								"type": "text",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}"
+							},
+							{
+								"key": "IDS-SESSION-ID",
+								"type": "text",
+								"value": "{{p2p_admin_suborg_check_session_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{pod1.url}}/session-service/api/v1/Orgs('{{orgid}}')/Parent",
+							"host": [
+								"{{pod1.url}}"
+							],
+							"path": [
+								"session-service",
+								"api",
+								"v1",
+								"Orgs('{{orgid}}')",
+								"Parent"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ValidateParentMigrationId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "77354fb1-decd-4335-85c5-d7fd5618eb14",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"console.log(responseBody);",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"   return",
+									"} ",
+									"var data = JSON.parse(responseBody);",
+									"var parentOrgId = pm.variables.get(\"parentOrgId\");",
+									"tests[\"Check: response.migrationState === DONE \"] = data.migrationState === \"DONE\";",
+									"tests[\"Check: response.orgId === \"+parentOrgId] = data.orgId === parentOrgId;"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "IDS-SESSION-ID",
+								"value": "{{p2p_admin_suborg_check_session_id}}",
+								"type": "text"
+							},
+							{
+								"key": "X_INFA_LOG_CTX",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{pod1.url}}/p2pms/api/v1/OrgMigrations('{{parentMigrationId}}')",
+							"host": [
+								"{{pod1.url}}"
+							],
+							"path": [
+								"p2pms",
+								"api",
+								"v1",
+								"OrgMigrations('{{parentMigrationId}}')"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "OrgMigration",
+			"item": [
+				{
+					"name": "login as p2p admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f673219a-d9cf-4f76-94ae-dd0671acd380",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"var pod2_url = pm.variables.get(\"pod2.url\");",
+									"console.log(\"---------->>>pod2_url:\"+pod2_url);",
+									"pm.test(\"Checking if the destination-url is there\", function() {",
+									"    pm.expect(pod2_url).not.equal(undefined);",
+									"    pm.expect(pod2_url).not.equal(\"\")",
+									"     pm.expect(pod2_url).not.equal(null)",
+									"    ",
+									"});",
+									"if(pod2_url === undefined || pod2_url === null || pod2_url === \"\") {",
+									"    postman.setNextRequest(null)",
+									"    return",
+									"}",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"} else {",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    postman.setEnvironmentVariable(\"p2p_admin_session_id\", jsonData.sessionId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "01761033-a3a9-42e2-af99-0a4ca524da5e",
+								"exec": [
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X_INFA_LOG_CTX",
+								"type": "text",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\" : \"{{pod1.AdminUserName}}\",\n\t\"password\" : \"{{pod1.AdminPassword}}\"\n}\n\n"
+						},
+						"url": {
+							"raw": "{{pod1.idsma.url}}/identity-service/api/v1/Login",
+							"host": [
+								"{{pod1.idsma.url}}"
+							],
+							"path": [
+								"identity-service",
+								"api",
+								"v1",
+								"Login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetDestinationPodId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4471982b-da8d-47ae-b51d-b57fd3cc4cb7",
+								"exec": [
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"",
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"var pod2_url = pm.variables.get(\"pod2.url\");",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"   return",
+									"} ",
+									"var jsonData = JSON.parse(responseBody);",
+									"for( var i=0; i< jsonData.length;i++){",
+									"    if( pod2_url === jsonData[i].baseUrl ){",
+									"        console.log(jsonData[i].id)",
+									"         postman.setEnvironmentVariable(\"destination_pod_id\", jsonData[i].id);",
+									"    }",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X_INFA_LOG_CTX",
+								"type": "text",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}"
+							},
+							{
+								"key": "IDS-SESSION-ID",
+								"type": "text",
+								"value": "{{p2p_admin_session_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{pod1.idsma.url}}/ma/api/v3/Pod",
+							"host": [
+								"{{pod1.idsma.url}}"
+							],
+							"path": [
+								"ma",
+								"api",
+								"v3",
+								"Pod"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "OrgMigration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7ba9c287-d4ad-49ea-9896-f22f4fe72c63",
+								"exec": [
+									"console.log(pm.request.body);",
+									"console.log(\"URL we are calling is: \" + pm.request.url);",
+									"console.log(\"X_INFA_LOG_CTX: \" + pm.request.headers.get(\"X_INFA_LOG_CTX\"));",
+									"tests[\"[Migration-Request-Status code is 201\"] = responseCode.code === 201;",
+									"if(pm.response.code >= 400 ){",
+									"    console.log(\"Got Response code greater(or equal to) 400\")",
+									"    console.log(responseBody)",
+									"   postman.setNextRequest(null)",
+									"}",
+									"var jsonData = JSON.parse(responseBody);",
+									"var p2pMigrationId = jsonData.id;",
+									"console.log(p2pMigrationId+\" MigrationID\");",
+									"postman.setEnvironmentVariable(\"migrationId\", p2pMigrationId);",
+									"var mId=pm.variables.get(\"migrationId\");",
+									"",
+									"pm.test(\"[Migration-Request-migId=\"+mId+\"]Migration-check\", function () {",
+									"    pm.expect(jsonData.migrationState).to.be.oneOf([\"INITIAL\",\"MIGRATING\"]);",
+									"    if ( jsonData.migrationState === \"MIGRATING\"){",
+									"    console.log(\"Request Initiated\");",
+									"}",
+									"});",
+									"postman.setNextRequest(null);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "cdc3a0d7-b777-4257-af7c-4e3881072f14",
+								"exec": [
+									"/*\r",
+									"{\r",
+									"                \"orgId\" : \"{{orgid}}\",\r",
+									"\t\t\t\t\"destinationPod\" : \"{{destination_pod_id}}\",\r",
+									"\t\t\t\t\"destinationPodUrl\" : \"{{pod2.url}}\"\r",
+									"}\r",
+									"*/\r",
+									"var parentMigrationId=pm.variables.get(\"parentMigrationId\");\r",
+									"var includeSubOrgs = pm.variables.get(\"includeSubOrgs\");\r",
+									"var destinationPod=pm.variables.get(\"destination_pod_id\");\r",
+									"var destinationPodUrl=pm.variables.get(\"pod2.url\");\r",
+									"var orgid=pm.variables.get(\"orgid\");\r",
+									"var destionalP2pmsUrl=destinationPodUrl+\"/p2pms/podlink\";\r",
+									"\r",
+									"var isParentMigrationIdSet = !(parentMigrationId === null || parentMigrationId === undefined || parentMigrationId === \"\");\r",
+									"var javaObj = null;\r",
+									"if( isParentMigrationIdSet === false ){\r",
+									"    if( includeSubOrgs === true ){\r",
+									"        javaObj = { orgId : orgid, destinationPod: destinationPod, destinationPodUrl: destionalP2pmsUrl, includeSubOrgs: includeSubOrgs };\r",
+									"    } else {\r",
+									"        // so that this is r33 compliant\r",
+									"        javaObj = { orgId : orgid, destinationPod: destinationPod, destinationPodUrl: destionalP2pmsUrl };\r",
+									"    }\r",
+									"} else {\r",
+									"    if( includeSubOrgs === true) {\r",
+									"     javaObj = { orgId : orgid, destinationPod: destinationPod, destinationPodUrl: destionalP2pmsUrl, includeSubOrgs: includeSubOrgs, parentMigrationId: parentMigrationId };\r",
+									"    } else {\r",
+									"        javaObj = { orgId : orgid, destinationPod: destinationPod, destinationPodUrl: destionalP2pmsUrl, parentMigrationId: parentMigrationId };\r",
+									"    }\r",
+									"}\r",
+									"\r",
+									"var migrationPayload = JSON.stringify(javaObj);\r",
+									"console.log(\"Migration-Payload:\"+migrationPayload);\r",
+									"postman.setEnvironmentVariable(\"migrationRequest\", migrationPayload);\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "IDS-SESSION-ID",
+								"type": "text",
+								"value": "{{p2p_admin_session_id}}"
+							},
+							{
+								"key": "X_INFA_LOG_CTX",
+								"value": "req_id={{requestid_prefix}}-{{$guid}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{migrationRequest}}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{pod1.url}}/p2pms/api/v1/OrgMigrations",
+							"host": [
+								"{{pod1.url}}"
+							],
+							"path": [
+								"p2pms",
+								"api",
+								"v1",
+								"OrgMigrations"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Status",
+			"item": [
+				{
+					"name": "OrgMigrationStatus",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7ba9c287-d4ad-49ea-9896-f22f4fe72c63",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"console.log(\"Status:\"+jsonData.migrationState+\" Id:\"+jsonData.id+\" orgId:\"+jsonData.orgId);",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if(jsonData.migrationState === \"MIGRATING\") {",
+									"    setTimeout(function(){",
+									"        console.log(\"waiting for status\");",
+									"    }, 10000);",
+									"    postman.setNextRequest('OrgMigrationStatus');",
+									"} ",
+									"else if (jsonData.migrationState === \"DONE\"){",
+									"    pm.test(\"MIGRATION_COMPLETE_OK-Check\", function () {",
+									"    pm.expect(jsonData.migrationState).to.eql(\"DONE\");",
+									"});",
+									"}",
+									"else if ( jsonData.migrationState === \"ERROR\"){",
+									"    console.log(responseBody);",
+									"    console.log(\"Migration failed check sumo logs for now\");",
+									"        pm.test(\"False-Check\", function () {",
+									"        pm.expect(jsonData.migrationState).to.eql(\"DONE\");",
+									"});",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "cdc3a0d7-b777-4257-af7c-4e3881072f14",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "IDS-SESSION-ID",
+								"type": "text",
+								"value": "{{p2p_admin_session_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{pod1.url}}/p2pms/api/v1/OrgMigrations('{{migrationId}}')",
+							"host": [
+								"{{pod1.url}}"
+							],
+							"path": [
+								"p2pms",
+								"api",
+								"v1",
+								"OrgMigrations('{{migrationId}}')"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Service-Status",
+			"item": [
+				{
+					"name": "GetServiceStatuses",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "1f09d217-e9f5-4e59-bdb1-9fcd8e888133",
+								"exec": [
+									"",
+									"console.log(responseBody.substring(0,400));",
+									"var THIS_REQUEST = \"GetServiceStatuses\";",
+									"var pollingPeriod = parseInt(pm.variables.get(\"status.polling.period.milli\"));",
+									"var limit = parseInt(pm.variables.get(\"poll.count.limit\"));",
+									"var WAIT_PERIOD_KEY=\"waitPeriodCnt\";",
+									"var waitPeriodCnt = pm.variables.get(WAIT_PERIOD_KEY);",
+									"var IN_PROGRESS=\"IN_PROGRESS\";",
+									"var ERROR=\"ERROR\";",
+									"var DONE=\"COMPLETED_OK\";",
+									"var INITIAL=\"INITIAL\";",
+									"var OPERATION=pm.variables.get(\"operation\");",
+									"",
+									"if(waitPeriodCnt === null || waitPeriodCnt === undefined) {",
+									"    waitPeriodCnt = parseInt(\"1\");",
+									"}",
+									"",
+									"/*-",
+									"Possible especially if the export hasn't started yet....",
+									"*/",
+									"if( pm.response.code === 500 && waitPeriodCnt < limit ) {",
+									"",
+									"    console.log(OPERATION+\" Result is not available waitPeriodCnt=\"+waitPeriodCnt+\" limit:\"+limit);",
+									"    postman.setNextRequest(THIS_REQUEST);",
+									"     setTimeout(function(){",
+									"        console.log(\"waiting for status\");",
+									"    }, pollingPeriod);",
+									"    postman.setNextRequest(THIS_REQUEST);",
+									"    var next = parseInt(waitPeriodCnt)+parseInt(1);",
+									"    postman.setEnvironmentVariable(WAIT_PERIOD_KEY, next );",
+									"    return;",
+									"}",
+									"console.log(\"Past Code 500\")",
+									"console.log(\"-----------------------------------------------------------------------------\");",
+									"console.log(\"-----------------------------------------------------------------------------\");",
+									"console.log(\"-----------------------------------------------------------------------------\");",
+									"console.log(\"-----------------------------------------------------------------------------\");",
+									"console.log(\"-----------------------------------------------------------------------------\");",
+									"console.log(\"-----------------------------------------------------------------------------\");",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"console.log(\"Status:\"+jsonData.status+\" Id:\"+jsonData.migrationId+\" orgId:\"+jsonData.orgId);",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"console.log(\"jsonData.status:\"+jsonData.status);",
+									"",
+									"if(jsonData.status === INITIAL) {",
+									"    setTimeout(function(){",
+									"        console.log(\"Waiting For \"+OPERATION+\" to complete\");",
+									"    }, pollingPeriod);",
+									"    postman.setNextRequest(THIS_REQUEST);",
+									"    return;",
+									"}",
+									"if(jsonData.status === IN_PROGRESS ) {",
+									"    setTimeout(function(){",
+									"        console.log(\"Waiting For \"+OPERATION+\" to complete\");",
+									"    }, pollingPeriod);",
+									"    postman.setNextRequest(THIS_REQUEST);",
+									"    return;",
+									"}",
+									"else if (jsonData.status === DONE){",
+									"    pm.test(\"COMPLETED_OK_CHECK\", function () {",
+									"    pm.expect(jsonData.status).to.eql(DONE);",
+									"});",
+									"}",
+									"else if ( jsonData.status === ERROR){",
+									"    console.log(responseBody);",
+									"        pm.test(\"False-Check\", function () {",
+									"        pm.expect(jsonData.status).to.eql(DONE);",
+									"});",
+									"}",
+									"postman.setNextRequest(null);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "15a6222e-745c-41e0-b4fc-f4e3ed78e7af",
+								"exec": [
+									"var OPERATION=pm.variables.get(\"operation\");",
+									"var pod1_url=pm.variables.get(\"pod1.url\");",
+									"var pod2_url=pm.variables.get(\"pod2.url\");",
+									"",
+									"var ORG_DELETE=\"orgdelete\";",
+									"var IMPORT=\"import\";",
+									"var EXPORT=\"export\";",
+									"var url = pod2_url;",
+									"if( OPERATION === EXPORT){",
+									"    url = pod1_url;",
+									"}",
+									"postman.setEnvironmentVariable(\"dest_url\", url);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "IDS-SESSION-ID",
+								"type": "text",
+								"value": "{{p2p_admin_session_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{dest_url}}/p2pms/Proxy/{{currentService}}/p2pmigration/{{operation}}/status/{{migrationId}}",
+							"host": [
+								"{{dest_url}}"
+							],
+							"path": [
+								"p2pms",
+								"Proxy",
+								"{{currentService}}",
+								"p2pmigration",
+								"{{operation}}",
+								"status",
+								"{{migrationId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "7162dbc8-a462-4350-a825-5636ef8ea076",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "c7de3ebe-66ad-4238-bfff-bd34e2ea294a",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
